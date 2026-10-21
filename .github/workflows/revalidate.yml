@@ -1,0 +1,35 @@
+# Weekly revalidation of every listed library (T51). For now: the lint, and
+# that each repository answers an anonymous ls-remote and has a semver tag.
+name: revalidate
+
+on:
+  schedule:
+    - cron: "23 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  alive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Form and order
+        run: python3 scripts/lint_index.py README.md
+
+      - name: Alive
+        run: python3 scripts/lint_index.py --all-alive README.md
+
+      # TODO (T51): build and test each library's newest tag with the current
+      # Dado release, in isolation with no secrets; open or update one issue
+      # per failing library mentioning its author; after three consecutive
+      # failed runs open a pull request moving its line under
+      # `## Unmaintained`, and move it back after a passing run. Also run at
+      # each Dado release (and, per T52, against the release candidate).
+      # Needs `issues: write` and `pull-requests: write` in a separate job that
+      # runs no library code.
